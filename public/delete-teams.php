@@ -10,8 +10,8 @@ function pageController()
         // Generate the DELETE statement for each team_id
         $ids = implode(',', $teams);
         $delete = "DELETE 
-        FROM tables 
-        WHERE league IN ($ids)";
+        FROM teams 
+        WHERE id IN ($ids)";
         // Copy and paste the statements in SQL PRO and verify they're correct.
         var_dump($delete);
     // }

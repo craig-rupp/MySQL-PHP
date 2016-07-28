@@ -2,10 +2,10 @@
 require __DIR__ . '/../src/Input.php';
 function pageController()
 {
+    $name = Input::get('name', '');
+    $league = Input::get('league', '');
+    $stadium = Input::get('stadium', '');
     if (Input::isPost()) {
-        $name = Input::get('name');
-        $league = Input::get('league');
-        $stadium = Input::get('stadium');
         // Write the INSERT statement to insert a team
         $string_db = "INSERT INTO teams (name, stadium, league) VALUES('$name', '$league', '$stadium')";
         // Either interpolate or concatenate the PHP variables
@@ -14,7 +14,10 @@ function pageController()
         var_dump($string_db);
     }
     return [
-        'title' => 'New Team'
+        'title' => 'New Team',
+        'name' => $name,
+        'league' => $league,
+        'stadium' => $stadium,
     ];
 }
 extract(pageController());
@@ -40,7 +43,8 @@ extract(pageController());
                         name="name"
                         id="name"
                         placeholder="Texas Rangers"
-                    >
+                        value="<?= $name ?>"
+                    />
                 </div>
             </div>
             <div class="form-group">
@@ -50,13 +54,15 @@ extract(pageController());
                 <div class="col-sm-10">
                     <div class="radio">
                         <label>
-                            <input type="radio" name="league" value="american" checked>
+                            <input type="radio" name="league" value="american" <?= 'american' == $league echo 'checked' : '' ?>>
                             American
                         </label>
                     </div>
                     <div class="radio">
                         <label>
-                            <input type="radio" name="league" value="national">
+                            <input
+                            <?= $league ?> 
+                            type="radio" name="league" value="national" <?= 'national' == $league echo 'checked' : '' ?>>
                             National
                         </label>
                     </div>
@@ -68,6 +74,8 @@ extract(pageController());
                 </label>
                 <div class="col-sm-10">
                     <input
+                    <?php if(isset($name)): ?>
+                        <?= $stadium ?>
                         type="text"
                         class="form-control"
                         name="stadium"
