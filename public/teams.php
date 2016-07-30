@@ -20,18 +20,27 @@ function pageController()
     $sql_command .= " ORDER by $sort_this";
     }
 
-    if (Input::has('page')) {
-    $page = Input::get('page', 1);
-    $limit = 5;
-    $offset = ($page - 1) * $limit;
+    // if(Input::get('page', 1)){
+    //   $page = 0;
+    // } else{
+    //   $page = Input::get('page') * 5 -5;
+
+    // }
+    $page = Input::get('page', 1) < 0 ? 1 : Input::get('page');
+    $offset = $page * 5 - 5;
+    $sql_command .= " LIMIT 5 OFFSET $offset";
+
+    // if (Input::has('page')) {
+    // $page = Input::get('page', 1);
+    // $limit = 5;
+    // $offset = ($page - 1) * $limit;
     // Add a LIMIT and an OFFSET clause, suppose the size of each page is 5
-    }
     // Copy the query and test it in SQL Pro
     var_dump($sql_command);
 
     return [
         'title' => 'Teams',
-        'page' => $page
+        'page' => $offset
     ];
 }
 extract(pageController());
@@ -141,7 +150,7 @@ extract(pageController());
                         <nav aria-label="Page navigation" class="text-center">
                             <ul class="pagination">
                                 <li>
-                                    <a href="?page=<?= $page -1 ?>" aria-label="Previous">
+                                    <a href="?page=<? $offset - 1?>" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
