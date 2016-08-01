@@ -17,7 +17,8 @@ CREATE TABLE players (
   team_id  INT UNSIGNED NOT NULL,
   name     VARCHAR(255) NOT NULL,
   position VARCHAR(50),
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+  FOREIGN KEY(team_id) REFERENCES teams(id)
 );
 
 CREATE TABLE games (
@@ -26,5 +27,7 @@ CREATE TABLE games (
   visitor_team_runs INT UNSIGNED NOT NULL,
   local_team_runs   INT UNSIGNED NOT NULL,
   game_date         DATETIME     NOT NULL,
-  PRIMARY KEY (visitor_team_id, local_team_id)
+  PRIMARY KEY (visitor_team_id, local_team_id, game_date),
+  FOREIGN KEY(visitor_team_id) REFERENCES teams(id),
+  FOREIGN KEY(local_team_id) REFERENCES teams(id)
 );
