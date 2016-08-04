@@ -1,40 +1,42 @@
 <?php
 require __DIR__ . '/../src/Input.php';
-
 function pageController()
 {
-    // Write the SELECT to retrieve the following statistics
-    // - Number of Games won
-    // - Number of Games lost
-    // - Number of Games won as local
-    // - Number of Games won as visitor
-    // Use joins or sub-queries as needed...
-    $sql = 
-    "SELECT
-(
-    SELECT COUNT(*)
-    FROM games
-    WHERE (local_team_runs > visitor_team_runs AND local_team_id = t.id) OR         (visitor_team_runs > local_team_runs and visitor_team_id = t.id)) AS 'TOTAL WINS',
-(
-    SELECT COUNT(*)
-    FROM games
-    WHERE (local_team_runs > visitor_team_runs AND visitor_team_id = t.id) OR (visitor_team_runs > local_team_runs and local_team_id = t.id)) AS 'Total Losses',
-(
-    SELECT COUNT(*)     
-    FROM games
-    WHERE (local_team_runs < visitor_team_runs and visitor_team_id = t.id)) AS 'Away Wins',
-(
-    SELECT COUNT(*)
-    FROM games
-    WHERE (local_team_runs > visitor_team_runs and local_team_id = t.id)) AS 'Home Wins' FROM
-teams t WHERE id = Input::get($teamId);";
-
-    // Copy the generated query and verify that it retrieves the correct values
-    // in SQL Pro
-    var_dump($sql);
-
+    $teamId = Input::get('team_id');
+    $sql = <<<STATISTICS 
+SELECT
+  (SELECT COUNT(*)
+   FROM games
+   WHERE (games.local_team_runs > games.visitor_team_runs AND
+          games.local_team_id = t.id)
+         OR (games.local_team_runs < games.visitor_team_runs AND
+             games.visitor_team_id = t.id)) AS games_won,
+  (SELECT COUNT(*)
+   FROM games
+   WHERE (games.local_team_runs < games.visitor_team_runs AND
+          games.local_team_id = t.id)
+         OR (games.local_team_runs > games.visitor_team_runs AND
+             games.visitor_team_id = t.id)) AS games_lost,
+  (SELECT COUNT(*)
+   FROM games
+   WHERE (games.local_team_runs > games.visitor_team_runs AND
+          games.local_team_id = t.id))      AS won_as_local,
+  (SELECT COUNT(*)
+   FROM games
+   WHERE (games.local_team_runs < games.visitor_team_runs AND
+          games.visitor_team_id = t.id))    AS won_as_visitor,
+  t.name
+FROM teams t
+WHERE t.id = $teamId
+STATISTICS;
+    $connection = new PDO('mysql:host=localhost;dbname=the_league_db', 'vagrant', 'vagrant', [
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+    ]);
+    $statistics = $connection->query($sql)->fetchAll();
+    $name = array_pop($statistics);
     return [
-        'title' => 'Statistics Texas Rangers',
+        'title' => $name,
+        ' statistics' => $statistics,
     ];
 }
 extract(pageController());
@@ -52,22 +54,23 @@ extract(pageController());
         </header>
     </div>
     <div class="row">
-        <canvas id="stats-chart" width="400" height="400"></canvas>
+        <canvas id="stats-chart"></canvas>
     </div>
 </div>
 <?php include '../partials/scripts.phtml' ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.0/Chart.bundle.min.js">
 </script>
 <script>
-    var ctx = $('#stats-chart');
+    var ctx = $('#stats-chart').get(0).getContext("2d");
+    ctx.canvas.height = 300;
     new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ["Won", "Lost", "Won as local", "Won as visitor"],
             datasets: [{
                 label: 'Games',
-                // These should be the values from our PHP query
-                data: [12, 19, 3, 5],
+                // `data` should be a JS array with the 4 numbers from the result set.
+                data: <?= echo json_encode($statistics) ?>,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',
                     'rgba(54, 162, 235, 0.2)',
@@ -90,7 +93,8 @@ extract(pageController());
                         beginAtZero:true
                     }
                 }]
-            }
+            },
+            maintainAspectRatio: false
         }
     });
 </script>
