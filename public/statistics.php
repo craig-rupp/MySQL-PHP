@@ -2,8 +2,8 @@
 require __DIR__ . '/../src/Input.php';
 function pageController()
 {
-    $teamId = Input::get('team_id');
-    $sql = <<<STATISTICS 
+    $teamId = Input::get('team_id', 3);
+$sql = <<<STATISTICS
 SELECT
   (SELECT COUNT(*)
    FROM games
@@ -32,11 +32,11 @@ STATISTICS;
     $connection = new PDO('mysql:host=localhost;dbname=the_league_db', 'vagrant', 'vagrant', [
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
     ]);
-    $statistics = $connection->query($sql)->fetchAll();
+    $statistics = $connection->query($sql)->fetch(PDO::FETCH_NUM);
     $name = array_pop($statistics);
     return [
         'title' => $name,
-        ' statistics' => $statistics,
+        'statistics' => $statistics,
     ];
 }
 extract(pageController());
@@ -70,7 +70,7 @@ extract(pageController());
             datasets: [{
                 label: 'Games',
                 // `data` should be a JS array with the 4 numbers from the result set.
-                data: <?= echo json_encode($statistics) ?>,
+                data: <?= json_encode($statistics) ?>,
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.2)',
                     'rgba(54, 162, 235, 0.2)',
